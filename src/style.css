@@ -1,9 +1,13 @@
 :root {
-  --layout-max-width: 1000px;
+  --layout-max-width: 800px;
   --layout-x-padding: 16px;
 
   --color-dark: #111111;
   --color-dark-gray: #374151;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 html {
@@ -13,15 +17,11 @@ html {
 body {
   margin: 0;
   height: 100%;
-}
-
-*, *::before, *::after {
-  box-sizing: border-box;
+  font-family: "Inter", sans-serif;
+  font-optical-sizing: auto;
 }
 
 h1 {
-  font-family: "Inter", sans-serif;
-  font-optical-sizing: auto;
   font-weight: 700;
   font-style: bold;
   color: var(--color-dark);
@@ -53,4 +53,46 @@ footer {
   max-width: var(--layout-max-width);
   padding: 0 var(--layout-x-padding);
   margin: 0 auto;
+}
+
+.subheader {
+  display: flex;
+  justify-content: space-between;
+}
+
+.contacts {
+  list-style: none;
+  gap: 16px;
+  padding: 0;
+  text-align: right;
+}
+
+.contacts a {
+  position: relative;
+  display: inline-block;
+  padding-right: 24px;
+  margin-bottom: 8px;
+}
+
+.contacts a::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  right: 0;
+  display: block;
+  width: 16px;
+  height: 16px;
+  background-size: cover;
+}
+
+.contacts a.email::before {
+  background-image: url("common/icon-gmail.svg");
+}
+
+.contacts a.instagram::before {
+  background-image: url("common/icon-instagram.svg");
+}
+
+.contacts a.linkedin::before {
+  background-image: url("common/icon-linkedin.png");
 }

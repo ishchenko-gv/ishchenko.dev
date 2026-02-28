@@ -16,17 +16,17 @@ func main() {
 func handler(w http.ResponseWriter, r *http.Request) {
 	reqPath := r.URL.Path
 	file, mime, err := loadFile(reqPath)
-
 	if err != nil {
-		fmt.Printf("error: %v", err)
+		log("error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Add("Content-Type", string(mime)+"; charset=utf-8")
+	contentType := contentTypeFromMime(mime)
+	w.Header().Add("Content-Type", contentType)
 	_, err = w.Write(file)
 	if err != nil {
-		fmt.Printf("error: %v", err)
+		log("error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -37,17 +37,20 @@ func handler(w http.ResponseWriter, r *http.Request) {
 type MimeType string
 
 var (
-	htmlMimeType MimeType = "text/html"
-	cssMimeType  MimeType = "text/css"
-	jsMimeType   MimeType = "text/javascript"
-	jsonMimeType MimeType = "application/json"
+	MimeTypeHtml  MimeType = "text/html"
+	MimeTypeCss   MimeType = "text/css"
+	MimeTypeJs    MimeType = "text/javascript"
+	MimeTypeJson  MimeType = "application/json"
+	MimeTypeXIcon MimeType = "image/x-icon"
+	MimeTypeSvg   MimeType = "image/svg+xml"
+	MimeTypePng   MimeType = "image/png"
 )
 
 func loadFile(filePath string) ([]byte, MimeType, error) {
 	var fileExt = regexp.MustCompile(`\.[A-Za-z0-9]{3,4}`)
 	ext := fileExt.FindString(filePath)
 
-	fmt.Printf("filePath %s, fileExt %s\n", filePath, ext)
+	log("filePath %s, fileExt %s", filePath, ext)
 
 	filePath = path.Join("src", filePath)
 	if ext == "" {
@@ -67,14 +70,39 @@ func loadFile(filePath string) ([]byte, MimeType, error) {
 func mimeFromExt(fileExt string) MimeType {
 	switch fileExt {
 	case "":
-		return htmlMimeType
+		return MimeTypeHtml
 	case ".css":
-		return cssMimeType
+		return MimeTypeCss
 	case ".js":
-		return jsMimeType
+		return MimeTypeJs
 	case ".json":
-		return jsonMimeType
+		return MimeTypeJson
+	case ".ico":
+		return MimeTypeXIcon
+	case ".svg":
+		return MimeTypeSvg
+	case ".png":
+		return MimeTypePng
 	default:
 		panic(fmt.Errorf("unsupported file extension: %s", fileExt))
 	}
+}
+
+func contentTypeFromMime(mimeType MimeType) string {
+	switch mimeType {
+	case MimeTypeHtml:
+		fallthrough
+	case MimeTypeCss:
+		fallthrough
+	case MimeTypeJs:
+		fallthrough
+	case MimeTypeJson:
+		return string(mimeType) + ";charset=utf-8"
+	}
+
+	return string(mimeType)
+}
+
+func log(message string, args ...any) {
+	fmt.Printf(message+"\n", args...)
 }
