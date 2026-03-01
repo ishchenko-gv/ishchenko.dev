@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"regexp"
+	"strings"
 	"time"
 )
 
@@ -21,14 +21,16 @@ func main() {
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	reqPath := r.URL.Path
-	file, mime, err := loadFile(reqPath)
+	file, err := loadFile(reqPath)
 	if err != nil {
 		log("error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if mime == MimeTypeHtml {
+	contentType := http.DetectContentType(file)
+
+	if strings.HasPrefix(contentType, "text/html") {
 		file, err = handleHtmlTemplate(file)
 		if err != nil {
 			log("error: %v", err)
@@ -37,7 +39,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Add("Content-Type", string(mime))
+	w.Header().Add("Content-Type", contentType)
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(file)
 	if err != nil {
@@ -47,24 +49,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-type MimeType string
-
-var (
-	MimeTypeHtml  MimeType = "text/html"
-	MimeTypeCss   MimeType = "text/css"
-	MimeTypeJs    MimeType = "text/javascript"
-	MimeTypeJson  MimeType = "application/json"
-	MimeTypeXIcon MimeType = "image/x-icon"
-	MimeTypeSvg   MimeType = "image/svg+xml"
-	MimeTypePng   MimeType = "image/png"
-)
-
-func loadFile(filePath string) ([]byte, MimeType, error) {
+func loadFile(filePath string) ([]byte, error) {
 	filePath = path.Join("src", filePath)
 
 	fi, err := os.Stat(filePath)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	switch mode := fi.Mode(); {
@@ -74,41 +64,12 @@ func loadFile(filePath string) ([]byte, MimeType, error) {
 
 	f, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
-	fileExt := extFromPath(filePath)
-	mime := mimeFromExt(fileExt)
+	log("Loading file %s - extension %s - mime type %s", filePath)
 
-	log("Loading file %s - extension %s - mime type %s", filePath, fileExt, mime)
-
-	return f, mime, nil
-}
-
-func extFromPath(filePath string) string {
-	var fileExt = regexp.MustCompile(`\.[A-Za-z0-9]{3,4}`)
-	return fileExt.FindString(filePath)
-}
-
-func mimeFromExt(fileExt string) MimeType {
-	switch fileExt {
-	case ".html":
-		return MimeTypeHtml
-	case ".css":
-		return MimeTypeCss
-	case ".js":
-		return MimeTypeJs
-	case ".json":
-		return MimeTypeJson
-	case ".ico":
-		return MimeTypeXIcon
-	case ".svg":
-		return MimeTypeSvg
-	case ".png":
-		return MimeTypePng
-	default:
-		panic(fmt.Errorf("unsupported file extension: %s", fileExt))
-	}
+	return f, nil
 }
 
 type PageData struct {
