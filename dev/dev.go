@@ -4,9 +4,11 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"mime"
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -20,17 +22,15 @@ func main() {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	reqPath := r.URL.Path
-	file, err := loadFile(reqPath)
+	filePath := r.URL.Path
+	file, mimeType, err := loadFile(filePath)
 	if err != nil {
 		log("error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	contentType := http.DetectContentType(file)
-
-	if strings.HasPrefix(contentType, "text/html") {
+	if strings.HasPrefix(mimeType, "text/html") {
 		file, err = handleHtmlTemplate(file)
 		if err != nil {
 			log("error: %v", err)
@@ -39,7 +39,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	w.Header().Add("Content-Type", contentType)
+	w.Header().Add("Content-Type", mimeType)
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(file)
 	if err != nil {
@@ -49,12 +49,12 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func loadFile(filePath string) ([]byte, error) {
+func loadFile(filePath string) ([]byte, string, error) {
 	filePath = path.Join("src", filePath)
 
 	fi, err := os.Stat(filePath)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	switch mode := fi.Mode(); {
@@ -64,12 +64,15 @@ func loadFile(filePath string) ([]byte, error) {
 
 	f, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	log("Loading file %s - extension %s - mime type %s", filePath)
+	ext := filepath.Ext(filePath)
+	mimeType := mime.TypeByExtension(ext)
 
-	return f, nil
+	log("Loading file %s - extension %s - mime type %s", filePath, ext, mimeType)
+
+	return f, mimeType, nil
 }
 
 type PageData struct {
