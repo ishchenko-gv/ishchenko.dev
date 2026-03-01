@@ -11,7 +11,7 @@ func startLivereload() {
 	fsChan := make(chan bool)
 
 	go watchFsForLivereload(fsChan)
-	go serveLivereloadSse(fsChan)
+	go serveLivereloadEventStream(fsChan)
 }
 
 func watchFsForLivereload(fsChan chan<- bool) {
@@ -28,9 +28,8 @@ func watchFsForLivereload(fsChan chan<- bool) {
 				if !ok {
 					return
 				}
-				log.Println("event:", event)
+				log.Println("file system event:", event)
 				if event.Has(fsnotify.Write) {
-					log.Println("modified file:", event.Name)
 					fsChan <- true
 				}
 			case err, ok := <-watcher.Errors:
@@ -51,7 +50,7 @@ func watchFsForLivereload(fsChan chan<- bool) {
 	<-make(chan struct{})
 }
 
-func serveLivereloadSse(fsChan <-chan bool) {
+func serveLivereloadEventStream(fsChan <-chan bool) {
 	var handler = func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/livereload" {
 			w.WriteHeader(http.StatusNotFound)
@@ -70,6 +69,7 @@ func serveLivereloadSse(fsChan <-chan bool) {
 				w.Write([]byte("data: fsChange\n\n"))
 				flusher.Flush()
 			case <-r.Context().Done():
+				log.Println("Event stream closed")
 				return
 			}
 		}
