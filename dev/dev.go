@@ -6,10 +6,11 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"time"
 )
 
 func main() {
-	log("Server is running on http://localhost:3000\n")
+	log("Server is running on http://localhost:3000")
 	http.ListenAndServe(":3000", http.HandlerFunc(handler))
 }
 
@@ -23,14 +24,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Add("Content-Type", string(mime))
+	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(file)
 	if err != nil {
 		log("error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	w.WriteHeader(http.StatusOK)
 }
 
 type MimeType string
@@ -46,13 +46,15 @@ var (
 )
 
 func loadFile(filePath string) ([]byte, MimeType, error) {
-	var fileExt = regexp.MustCompile(`\.[A-Za-z0-9]{3,4}`)
-	ext := fileExt.FindString(filePath)
-
-	log("filePath %s, fileExt %s", filePath, ext)
-
 	filePath = path.Join("src", filePath)
-	if ext == "" {
+
+	fi, err := os.Stat(filePath)
+	if err != nil {
+		return nil, "", err
+	}
+
+	switch mode := fi.Mode(); {
+	case mode.IsDir():
 		filePath = path.Join(filePath, "index.html")
 	}
 
@@ -61,14 +63,22 @@ func loadFile(filePath string) ([]byte, MimeType, error) {
 		return nil, "", err
 	}
 
-	mime := mimeFromExt(ext)
+	fileExt := extFromPath(filePath)
+	mime := mimeFromExt(fileExt)
+
+	log("Loading file %s - extension %s - mime type %s", filePath, fileExt, mime)
 
 	return f, mime, nil
 }
 
+func extFromPath(filePath string) string {
+	var fileExt = regexp.MustCompile(`\.[A-Za-z0-9]{3,4}`)
+	return fileExt.FindString(filePath)
+}
+
 func mimeFromExt(fileExt string) MimeType {
 	switch fileExt {
-	case "":
+	case ".html":
 		return MimeTypeHtml
 	case ".css":
 		return MimeTypeCss
@@ -88,5 +98,7 @@ func mimeFromExt(fileExt string) MimeType {
 }
 
 func log(message string, args ...any) {
-	fmt.Printf(message+"\n", args...)
+	now := time.Now().Format(time.RFC822)
+	msg := fmt.Sprintf(message+"\n", args...)
+	fmt.Printf("[%s] %s", now, msg)
 }
