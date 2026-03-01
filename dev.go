@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	fmt.Printf("Server is running on http://localhost:3000\n")
+	log("Server is running on http://localhost:3000\n")
 	http.ListenAndServe(":3000", http.HandlerFunc(handler))
 }
 
@@ -22,8 +22,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	contentType := contentTypeFromMime(mime)
-	w.Header().Add("Content-Type", contentType)
+	w.Header().Add("Content-Type", string(mime))
 	_, err = w.Write(file)
 	if err != nil {
 		log("error: %v", err)
@@ -86,21 +85,6 @@ func mimeFromExt(fileExt string) MimeType {
 	default:
 		panic(fmt.Errorf("unsupported file extension: %s", fileExt))
 	}
-}
-
-func contentTypeFromMime(mimeType MimeType) string {
-	switch mimeType {
-	case MimeTypeHtml:
-		fallthrough
-	case MimeTypeCss:
-		fallthrough
-	case MimeTypeJs:
-		fallthrough
-	case MimeTypeJson:
-		return string(mimeType) + ";charset=utf-8"
-	}
-
-	return string(mimeType)
 }
 
 func log(message string, args ...any) {
