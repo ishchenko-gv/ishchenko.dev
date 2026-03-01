@@ -1,3 +1,4 @@
 #!/bin/bash
 
-gcloud compute scp --recurse src/* ishchenko-dev:/home/georgii/www
+# TODO: add assets build stage
+#gcloud compute scp --recurse src/* ishchenko-dev:/home/georgii/www
