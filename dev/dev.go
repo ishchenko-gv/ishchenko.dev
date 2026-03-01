@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 	"path"
@@ -11,7 +13,10 @@ import (
 
 func main() {
 	log("Server is running on http://localhost:3000")
-	http.ListenAndServe(":3000", http.HandlerFunc(handler))
+	err := http.ListenAndServe(":3000", http.HandlerFunc(handler))
+	if err != nil {
+		log("%v", err)
+	}
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -21,6 +26,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		log("error: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	}
+
+	if mime == MimeTypeHtml {
+		file, err = handleHtmlTemplate(file)
+		if err != nil {
+			log("error: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.Header().Add("Content-Type", string(mime))
@@ -95,6 +109,43 @@ func mimeFromExt(fileExt string) MimeType {
 	default:
 		panic(fmt.Errorf("unsupported file extension: %s", fileExt))
 	}
+}
+
+type PageData struct {
+	LivereloadScript template.HTML
+}
+
+func handleHtmlTemplate(file []byte) ([]byte, error) {
+	tmpl, err := template.New("page").Parse(string(file))
+	if err != nil {
+		return nil, err
+	}
+
+	pageData, err := getPageData()
+	if err != nil {
+		return nil, err
+	}
+
+	buf := bytes.NewBuffer(nil)
+	err = tmpl.Execute(buf, pageData)
+	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+func getPageData() (*PageData, error) {
+	livereloadScriptSrc, err := os.ReadFile("dev/livereload.js")
+	if err != nil {
+		return nil, err
+	}
+
+	livereloadScriptContent := fmt.Sprintf("<script>%s</script>", string(livereloadScriptSrc))
+
+	return &PageData{
+		LivereloadScript: template.HTML(livereloadScriptContent),
+	}, nil
 }
 
 func log(message string, args ...any) {
