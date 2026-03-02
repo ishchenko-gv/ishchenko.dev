@@ -27,7 +27,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	reqPath := r.URL.Path
 	file, mimeType, err := loadFile(reqPath)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("%v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -35,7 +35,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(mimeType, "text/html") {
 		file, err = handleHtmlTemplate(file)
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("%v", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -45,7 +45,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(file)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("%v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
