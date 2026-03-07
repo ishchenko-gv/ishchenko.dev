@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"html/template"
 	"log"
@@ -11,6 +10,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/ishchenko-gv/ishchenko-dev/tmpl"
 )
 
 func main() {
@@ -33,7 +34,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strings.HasPrefix(mimeType, "text/html") {
-		file, err = handleHtmlTemplate(file)
+		pageData, err := getPageData()
+		if err != nil {
+			log.Printf("%v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		file, err = tmpl.HandleHtmlTemplate(file, pageData)
 		if err != nil {
 			log.Printf("%v", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -76,32 +84,7 @@ func loadFile(filePath string) ([]byte, string, error) {
 
 	return f, mimeType, nil
 }
-
-func handleHtmlTemplate(file []byte) ([]byte, error) {
-	tmpl, err := template.New("page").Parse(string(file))
-	if err != nil {
-		return nil, err
-	}
-
-	pageData, err := getPageData()
-	if err != nil {
-		return nil, err
-	}
-
-	buf := bytes.NewBuffer(nil)
-	err = tmpl.Execute(buf, pageData)
-	if err != nil {
-		return nil, err
-	}
-
-	return buf.Bytes(), nil
-}
-
-type PageData struct {
-	LivereloadScript template.HTML
-}
-
-func getPageData() (*PageData, error) {
+func getPageData() (*tmpl.PageData, error) {
 	livereloadScriptSrc, err := os.ReadFile("dev/livereload.js")
 	if err != nil {
 		return nil, err
@@ -109,7 +92,7 @@ func getPageData() (*PageData, error) {
 
 	livereloadScriptContent := fmt.Sprintf("<script>%s</script>", string(livereloadScriptSrc))
 
-	return &PageData{
+	return &tmpl.PageData{
 		LivereloadScript: template.HTML(livereloadScriptContent),
 	}, nil
 }
