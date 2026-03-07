@@ -1,3 +1,3 @@
 #!/bin/bash
 
-go run dev/dev.go
+go run ./dev

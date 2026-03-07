@@ -1,8 +1,10 @@
 package main
 
 import (
+	"io/fs"
 	"log"
 	"net/http"
+	"path/filepath"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -45,6 +47,13 @@ func watchFsForLivereload(fsChan chan<- bool) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	err = filepath.WalkDir("src", func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() {
+			watcher.Add(path)
+		}
+		return nil
+	})
 
 	// Block main goroutine forever.
 	<-make(chan struct{})

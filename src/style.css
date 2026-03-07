@@ -17,7 +17,7 @@ html {
 body {
   margin: 0;
   height: 100%;
-  font-family: "Inter", sans-serif;
+  font-family: "Share Tech Mono", monospace;
   font-optical-sizing: auto;
 }
 
@@ -28,21 +28,36 @@ h1 {
 }
 
 p {
-  font-family: "Inter", sans-serif;
-  font-optical-sizing: auto;
   font-weight: 400;
   font-style: normal;
   color: var(--color-dark-gray);
 }
 
-.footer-pusher {
+.screen {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  justify-content: space-between;
+  width: 100%;
+  height: 100vh;
+}
+
+.screen > div{
+  width: 100%;
+}
+
+header h1, header p, footer {
+  color: #999999;
+}
+
+header {
+  margin-top: 25vh; 
+}
+
+header h1 {
+  text-transform: uppercase;
 }
 
 footer {
-  margin-top: auto;
   padding-top: var(--layout-x-padding);
   padding-bottom: var(--layout-x-padding);
   text-align: center;
@@ -67,6 +82,7 @@ footer {
   padding: 0;
   margin-left: auto;
   text-align: right;
+  filter: invert(0.5);
 }
 
 .contacts a {
@@ -97,4 +113,23 @@ footer {
 
 .contacts a.linkedin::before {
   background-image: url("common/icon-linkedin.png");
+}
+
+#scene {
+  position:absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+#scene::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
 }

@@ -2,20 +2,22 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=3" />
     <title>Georgii Ishchenko</title>
     <link rel="icon" type="image/x-icon" href="/common/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,487&family=Share+Tech+Mono&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" type="text/css" href="/style.css" />
     {{.LivereloadScript}}
   </head>
   <body>
-    <div class="footer-pusher">
+    <div id="scene"></div>
+    <div class="screen">
+      <!-- <div> -->
       <header>
         <div class="container">
           <h1>Georgii Ishchenko</h1>
@@ -51,8 +53,18 @@
         </div>
       </header>
       <footer>
-        <div class="container">©2026 Georgii Ishchenko</div>
+        <div class="container">©2026</div>
       </footer>
+      <!-- </div> -->
     </div>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.183.2/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.183.2/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="/playground/scene.js"></script>
   </body>
 </html>
