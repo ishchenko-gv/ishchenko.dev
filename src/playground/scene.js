@@ -69,7 +69,9 @@ loader.load(
 
 camera.position.z = 3.6;
 
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({
+  antialias: true,
+});
 renderer.setSize(window.innerWidth, window.innerHeight);
 
 const sceneElement = document.getElementById("scene");
